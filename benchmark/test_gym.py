@@ -22,8 +22,9 @@ def parse_args():
     parser.add_argument('--task', type=str, default='Door')
     parser.add_argument('--num_envs', type=int, default=1)
     parser.add_argument('--seed', type=int, default=0)
-    parser.add_argument('--control_freq', type=int, default=20)
+    parser.add_argument('--control_freq', type=int, default=1 / SIMULATION_TIMESTEP)
     parser.add_argument('--headless', action='store_true')
+    parser.add_argument('--ignore-done', action='store_true')
     args = parser.parse_args()
 
     return args
@@ -47,7 +48,8 @@ def main(args):
         has_offscreen_renderer=False,
         use_camera_obs=False,
         control_freq=args.control_freq,
-        horizon=200,
+        horizon=500,
+        ignore_done=args.ignore_done,
         controller_configs=load_controller_config(default_controller="JOINT_TORQUE"),
     )
     env = GymWrapper(robosuite_env)
@@ -64,12 +66,21 @@ def main(args):
           env.observation_space.shape, 'action_space',
           env.action_space.shape)
     print("action_space", env.action_space)
+    print("ignore done", args.ignore_done)
 
     # frame skip is number of simulation steps per action
     # simulation freq / control freq
-    frame_skip = 1 / float(args.control_freq) / SIMULATION_TIMESTEP
+    frame_skip_man = 1 / float(args.control_freq) / SIMULATION_TIMESTEP
     total_step = 1000
 
+    # just check you're not stupid
+    frame_skip = robosuite_env.control_timestep / robosuite_env.model_timestep
+    assert frame_skip_man == frame_skip
+
+    print("frame_skip", frame_skip_man)
+    print("total_step", total_step)
+
+    # reset env
     vec_env.reset()
 
     # Get action limits
@@ -77,11 +88,16 @@ def main(args):
 
     t = time.perf_counter()
     for _ in tqdm.trange(total_step):
+        # sample random action
         action = np.random.uniform(low, high, size=(n_envs, env.action_space.shape[0]))
+        # step
         obs, reward, done, _ = vec_env.step(action)
-        terminated_envs = np.where(done)[0]
-        if len(terminated_envs) > 0:
-            vec_env.reset(id=np.where(done)[0])
+        # reset env if done
+        if not args.ignore_done:
+            terminated_envs = np.where(done)[0]
+            if len(terminated_envs) > 0:
+                vec_env.reset(id=np.where(done)[0])
+        # render
         if n_envs == 1 and not args.headless:
             vec_env.render()
     # FPS
