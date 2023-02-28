@@ -109,7 +109,10 @@ mjkey.txt
 .mujocomanip_temp_model.xml
 
 *.jpg
+
+# IDE files
 .idea
+*.vscode
 
 .pytest_cache/
 
