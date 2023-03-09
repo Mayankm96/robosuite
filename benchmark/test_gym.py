@@ -13,18 +13,20 @@ import tqdm
 import csv
 
 import warnings
+
 warnings.filterwarnings("ignore")
 
 import argparse
 
+
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--task', type=str, default='Door')
-    parser.add_argument('--num_envs', type=int, default=1)
-    parser.add_argument('--seed', type=int, default=0)
-    parser.add_argument('--control_freq', type=int, default=1 / SIMULATION_TIMESTEP)
-    parser.add_argument('--headless', action='store_true')
-    parser.add_argument('--ignore-done', action='store_true')
+    parser.add_argument("--task", type=str, default="Door")
+    parser.add_argument("--num_envs", type=int, default=1)
+    parser.add_argument("--seed", type=int, default=0)
+    parser.add_argument("--control_freq", type=int, default=1 / SIMULATION_TIMESTEP)
+    parser.add_argument("--headless", action="store_true")
+    parser.add_argument("--ignore-done", action="store_true")
     args = parser.parse_args()
 
     return args
@@ -42,13 +44,13 @@ def main(args):
 
     # create environment instance
     robosuite_env = suite.make(
-        env_name=args.task, # try with other tasks like "Stack" and "Door"
+        env_name=args.task,  # try with other tasks like "Stack" and "Door"
         robots="Panda",  # try with other robots like "Sawyer" and "Jaco"
         has_renderer=not args.headless and n_envs == 1,
         has_offscreen_renderer=False,
         use_camera_obs=False,
         control_freq=args.control_freq,
-        horizon=500,
+        horizon=300,
         ignore_done=args.ignore_done,
         controller_configs=load_controller_config(default_controller="JOINT_TORQUE"),
     )
@@ -60,11 +62,15 @@ def main(args):
     else:
         vec_env = tianshou.env.SubprocVectorEnv([lambda: env for _ in range(n_envs)])
 
-    
     vec_env.seed(args.seed)
-    print('Created', args.task, 'with observation_space',
-          env.observation_space.shape, 'action_space',
-          env.action_space.shape)
+    print(
+        "Created",
+        args.task,
+        "with observation_space",
+        env.observation_space.shape,
+        "action_space",
+        env.action_space.shape,
+    )
     print("action_space", env.action_space)
     print("ignore done", args.ignore_done)
 
@@ -108,9 +114,9 @@ def main(args):
 
     vec_env.close()
 
-    fieldnames = ['n_envs', 'frame_skip', 'total_step', 'time_elapsed', 'fps']
+    fieldnames = ["n_envs", "frame_skip", "total_step", "time_elapsed", "fps"]
     # open the file in the write mode
-    with open('results.csv', 'a') as f:
+    with open("results.csv", "a") as f:
         # create the csv writer
         writer = csv.writer(f)
         # write header
@@ -119,7 +125,6 @@ def main(args):
         row = [n_envs, frame_skip, total_step, time_elapsed, fps]
         # write a row to the csv file
         writer.writerow(row)
-    
 
 
 if __name__ == "__main__":
