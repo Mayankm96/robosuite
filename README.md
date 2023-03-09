@@ -1,3 +1,10 @@
+```bash
+cd benchmark
+python test_gym.py --headless --control_freq 30 --num_envs 128
+```
+
+---
+
 # robosuite
 
 ![gallery of_environments](docs/images/gallery.png)
