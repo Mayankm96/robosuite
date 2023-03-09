@@ -1,6 +1,9 @@
 ```bash
 cd benchmark
-python test_gym.py --headless --control_freq 30 --num_envs 128
+# door
+python test_gym.py --headless --control_freq 30 --num_envs 128 --task Door
+# lift
+python test_gym.py --headless --control_freq 30 --num_envs 128 --task Lift
 ```
 
 ---
